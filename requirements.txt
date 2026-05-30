@@ -1,0 +1,9 @@
+PyQt5>=5.15.0
+opencv-python>=4.5.0
+numpy>=1.21.0
+
+# Tuy chon: can de nhan dien khuon mat that.
+# Cai rieng neu may co moi truong build dlib phu hop:
+# cmake>=3.25.0
+# dlib>=19.24.0
+# face_recognition>=1.3.0
