@@ -92,8 +92,8 @@ xây dựng với **Python · PyQt5 · OpenCV · SQLite**
 ### Bước 1 — Tải mã nguồn
 
 ```bash
-git clone https://github.com/baotri2k6/face-attendance-system-v2-main.git
-cd face-attendance-system-v2-main
+git clone https://github.com/baotri2k6/face-attendance-system-v2.git
+cd face-attendance-system-v2
 ```
 
 ### Bước 2 — Tạo môi trường ảo (khuyến nghị)
