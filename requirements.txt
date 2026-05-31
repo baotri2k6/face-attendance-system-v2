@@ -1,9 +1,23 @@
-PyQt5>=5.15.0
-opencv-python>=4.5.0
-numpy>=1.21.0
+# ============================================================
+# Hệ thống Điểm danh Nhận diện Khuôn mặt — Face Attendance v2
+# Môi trường: Python (Windows), venv
+# ============================================================
 
-# Tuy chon: can de nhan dien khuon mat that.
-# Cai rieng neu may co moi truong build dlib phu hop:
-# cmake>=3.25.0
-# dlib>=19.24.0
-# face_recognition>=1.3.0
+# ── Giao diện ───────────────────────────────────────────────
+PyQt5==5.15.11
+PyQt5-Qt5==5.15.2
+PyQt5_sip==12.18.0
+
+# ── Xử lý ảnh & camera ─────────────────────────────────────
+opencv-python==4.13.0.92
+numpy==2.4.6
+pillow==12.2.0
+
+# ── Nhận diện khuôn mặt ────────────────────────────────────
+dlib==20.0.1
+face-recognition==1.3.0
+face_recognition_models==0.3.0
+
+# ── Tiện ích ───────────────────────────────────────────────
+click==8.4.1
+colorama==0.4.6
