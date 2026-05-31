@@ -108,10 +108,10 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### Bước 3 — Cài thư viện cơ bản
+### Bước 3 — Cài đặt tất cả thư viện
 
 ```bash
-pip install PyQt5 opencv-python numpy
+pip install -r requirements.txt
 ```
 
 ### Bước 4 — (Tùy chọn) Cài `face_recognition` để nhận diện chính xác
