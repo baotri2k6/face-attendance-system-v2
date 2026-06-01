@@ -9,7 +9,9 @@ from PyQt5.QtGui import QImage, QPixmap, QColor
 import cv2
 import numpy as np
 import pickle
+import os
 from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
 from modules.face_recognition import simple_encoder
 
 PAGE_STYLE = """
@@ -34,9 +36,48 @@ class RecognizePage(QWidget):
         self._known_students = []
         self._recognized_ids = set()
         self._session_id = None
+        self._video_font = self._load_video_font()
         self.setStyleSheet(PAGE_STYLE)
         self._build_ui()
         self.refresh()
+
+    def _load_video_font(self, size=16):
+        font_paths = [
+            r"C:\Windows\Fonts\arial.ttf",
+            r"C:\Windows\Fonts\segoeui.ttf",
+            r"C:\Windows\Fonts\tahoma.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ]
+        for path in font_paths:
+            if os.path.exists(path):
+                return ImageFont.truetype(path, size)
+        return ImageFont.load_default()
+
+    def _draw_video_label(self, frame_bgr, text, left, bottom, right, color):
+        """Draw Vietnamese text on an OpenCV frame using a Unicode font."""
+        text = str(text)
+        frame_h, frame_w = frame_bgr.shape[:2]
+        image = Image.fromarray(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB))
+        draw = ImageDraw.Draw(image)
+
+        bbox = draw.textbbox((0, 0), text, font=self._video_font)
+        text_w = bbox[2] - bbox[0]
+        text_h = bbox[3] - bbox[1]
+        pad_x = 4
+        pad_y = 4
+        bg_left = max(0, left)
+        bg_bottom = min(frame_h - 1, bottom)
+        bg_top = max(0, bg_bottom - text_h - pad_y * 2)
+        bg_right = min(frame_w - 1, max(right, left + text_w + pad_x * 2))
+        text_x = min(frame_w - text_w - 1, bg_left + pad_x)
+        text_y = max(0, bg_top + pad_y - bbox[1])
+
+        rgb_color = (color[2], color[1], color[0])
+        draw.rectangle((bg_left, bg_top, bg_right, bg_bottom), fill=rgb_color)
+        draw.text((text_x, text_y), text, font=self._video_font, fill=(255, 255, 255))
+        frame_bgr[:, :] = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+        return frame_bgr
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
@@ -207,8 +248,7 @@ class RecognizePage(QWidget):
                             self.lbl_count.setText(f"{len(self._recognized_ids)} sinh viên đã điểm danh")
 
                 cv2.rectangle(display_frame, (left, top), (right, bottom), color, 2)
-                cv2.rectangle(display_frame, (left, bottom-25), (right, bottom), color, cv2.FILLED)
-                cv2.putText(display_frame, name, (left+4, bottom-6), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
+                display_frame = self._draw_video_label(display_frame, name, left, bottom, right, color)
         except ImportError:
             self._process_frame_opencv(display_frame)
 
@@ -222,14 +262,13 @@ class RecognizePage(QWidget):
     def _process_frame_opencv(self, display_frame):
         boxes = simple_encoder.detect_faces(display_frame)
         if not boxes:
-            cv2.putText(
+            self._draw_video_label(
                 display_frame,
-                "Dang dung OpenCV fallback",
-                (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                (255, 255, 0),
-                2,
+                "Đang sử dụng OpenCV fallback",
+                10,
+                38,
+                310,
+                (0, 180, 180),
             )
             return
 
@@ -238,7 +277,7 @@ class RecognizePage(QWidget):
             enc = simple_encoder.encode_face_box(display_frame, box)
             idx, score = simple_encoder.best_match(enc, self._known_simple_encodings)
 
-            name = "Khong nhan ra"
+            name = "Không nhận ra"
             color = (0, 0, 255)
 
             if idx >= 0:
@@ -255,16 +294,8 @@ class RecognizePage(QWidget):
                     self.lbl_count.setText(f"{len(self._recognized_ids)} sinh viên đã điểm danh")
 
             cv2.rectangle(display_frame, (left, top), (right, bottom), color, 2)
-            cv2.rectangle(display_frame, (left, bottom - 25), (right, bottom), color, cv2.FILLED)
-            cv2.putText(
-                display_frame,
-                f"{name} {score:.2f}" if idx >= 0 else name,
-                (left + 4, bottom - 6),
-                cv2.FONT_HERSHEY_DUPLEX,
-                0.5,
-                (255, 255, 255),
-                1,
-            )
+            label = f"{name} {score:.2f}" if idx >= 0 else name
+            display_frame = self._draw_video_label(display_frame, label, left, bottom, right, color)
 
     def _manual_attendance(self):
         session_id = self.cmb_session.currentData()
